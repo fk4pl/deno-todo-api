@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🦕 Deno Todo App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: white;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .todo-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .todo-form input {
+      flex: 1;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .todo-form input:focus {
+      outline: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .todo-form button {
+      padding: 15px 25px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .todo-form button:hover {
+      background: #45a049;
+      transform: translateY(-2px);
+    }
+
+    .todo-list {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      transition: background 0.2s;
+    }
+
+    .todo-item:last-child {
+      border-bottom: none;
+    }
+
+    .todo-item:hover {
+      background: #f9f9f9;
+    }
+
+    .todo-item input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin-right: 15px;
+      cursor: pointer;
+      accent-color: #667eea;
+    }
+
+    .todo-item .title {
+      flex: 1;
+      font-size: 1.1rem;
+      color: #333;
+    }
+
+    .todo-item.completed .title {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .todo-item .delete-btn {
+      background: #ff4757;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .todo-item .delete-btn:hover {
+      background: #ff3344;
+      transform: scale(1.05);
+    }
+
+    .empty-message {
+      text-align: center;
+      color: #999;
+      padding: 30px;
+      font-size: 1.1rem;
+    }
+
+    .stats {
+      text-align: center;
+      color: white;
+      margin-top: 20px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🦕 Todo App</h1>
+    
+    <div class="todo-form">
+      <input type="text" id="todoInput" placeholder="Yeni görev ekle..." onkeypress="handleKeyPress(event)">
+      <button onclick="addTodo()">Ekle</button>
+    </div>
+
+    <div class="todo-list" id="todoList">
+      <div class="empty-message">Yükleniyor...</div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <script>
+    const API_URL = '/todos';
+
+    // Sayfa yüklendiğinde todoları getir
+    document.addEventListener('DOMContentLoaded', fetchTodos);
+
+    async function fetchTodos() {
+      try {
+        const response = await fetch(API_URL);
+        const result = await response.json();
+        renderTodos(result.data);
+      } catch (error) {
+        console.error('Hata:', error);
+      }
+    }
+
+    function renderTodos(todos) {
+      const todoList = document.getElementById('todoList');
+      const stats = document.getElementById('stats');
+
+      if (todos.length === 0) {
+        todoList.innerHTML = '<div class="empty-message">Henüz görev yok. Yeni bir görev ekleyin!</div>';
+        stats.textContent = '';
+        return;
+      }
+
+      const completedCount = todos.filter(t => t.completed).length;
+      stats.textContent = `${completedCount} / ${todos.length} görev tamamlandı`;
+
+      todoList.innerHTML = todos.map(todo => `
+        <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+          <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${todo.id}, this.checked)">
+          <span class="title">${escapeHtml(todo.title)}</span>
+          <button class="delete-btn" onclick="deleteTodo(${todo.id})">Sil</button>
+        </div>
+      `).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === 'Enter') {
+        addTodo();
+      }
+    }
+
+    async function addTodo() {
+      const input = document.getElementById('todoInput');
+      const title = input.value.trim();
+
+      if (!title) return;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        });
+
+        if (response.ok) {
+          input.value = '';
+          fetchTodos();
+        }
+      } catch (error) {
+        console.error('Hata:', error);
+      }
+    }
+
+    async function toggleTodo(id, completed) {
+      try {
+        await fetch(`${API_URL}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed })
+        });
+        fetchTodos();
+      } catch (error) {
+        console.error('Hata:', error);
+      }
+    }
+
+    async function deleteTodo(id) {
+      try {
+        await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        fetchTodos();
+      } catch (error) {
+        console.error('Hata:', error);
+      }
+    }
+  </script>
+</body>
+</html>
