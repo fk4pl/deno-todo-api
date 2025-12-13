@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deno Todo App</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1><img src="/Deno.svg" alt="Deno" style="width: 64px; height: 64px; vertical-align: middle; margin-right: 10px;"> Todo App</h1>
+    
+    <div class="todo-form">
+      <input type="text" id="todoInput" placeholder="Yeni görev ekle..." onkeypress="handleKeyPress(event)">
+      <button onclick="addTodo()">Ekle</button>
+    </div>
+
+    <div class="todo-list" id="todoList">
+      <% if (todos.length === 0) { %>
+        <div class="empty-message">Henüz görev yok. Yeni bir görev ekleyin!</div>
+      <% } else { %>
+        <% todos.forEach(function(todo) { %>
+          <div class="todo-item <%= todo.completed ? 'completed' : '' %>" data-id="<%= todo.id %>">
+            <input type="checkbox" <%= todo.completed ? 'checked' : '' %> onchange="toggleTodo(<%= todo.id %>, this.checked)">
+            <span class="title"><%= todo.title %></span>
+            <button class="delete-btn" onclick="deleteTodo(<%= todo.id %>)">Sil</button>
+          </div>
+        <% }); %>
+      <% } %>
+    </div>
+
+    <div class="stats" id="stats">
+      <% if (todos.length > 0) { %>
+        <% const completedCount = todos.filter(t => t.completed).length; %>
+        <%= completedCount %> / <%= todos.length %> görev tamamlandı
+      <% } %>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

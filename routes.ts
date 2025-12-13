@@ -1,4 +1,5 @@
 import { Router } from "@oak/oak";
+import ejs from "ejs";
 import type { Todo } from "./types.ts";
 
 // In-memory veri
@@ -9,6 +10,12 @@ const todos: Todo[] = [
 let nextId = 3;
 
 export const router = new Router();
+
+// GET / - Render index page
+router.get("/", async (ctx) => {
+  const html = await ejs.renderFile("./views/index.ejs", { todos });
+  ctx.response.body = html;
+});
 
 // GET /todos - Tüm todoları listele
 router.get("/todos", (ctx) => {
