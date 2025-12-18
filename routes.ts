@@ -1,3 +1,5 @@
+// Deno Özelliği #5: Native ES Modules
+// JSR (@oak/oak), NPM (ejs) ve yerel TypeScript modüllerinden import kullanımı
 import { Router } from "@oak/oak";
 import ejs from "ejs";
 import type { Todo } from "./types.ts";

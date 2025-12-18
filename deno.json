@@ -1,5 +1,8 @@
 {
   "tasks": {
+    // Deno Özelliği #1: Permission System - Ağ ve dosya erişimi için izin sistemi
+    // --allow-net: HTTP sunucusu için ağ erişimi izni
+    // --allow-read: Statik dosyalar ve EJS şablonları için dosya okuma izni
     "dev": "deno run --watch --allow-net --allow-read main.ts",
     "start": "deno run --allow-net --allow-read main.ts"
   },

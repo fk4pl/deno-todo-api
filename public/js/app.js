@@ -1,8 +1,5 @@
 const API_URL = '/todos';
 
-// Note: Initial fetch is handled by server-side rendering (EJS)
-// document.addEventListener('DOMContentLoaded', fetchTodos);
-
 async function fetchTodos() {
   try {
     const response = await fetch(API_URL);
